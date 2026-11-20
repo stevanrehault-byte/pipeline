@@ -1,0 +1,43 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+Lis INTENT.md avant tout travail.
+
+@AGENTS.md
+
+## Projet
+
+Mini CRM de prospection mono-utilisateur. `INTENT.md` fixe le produit, l'architecture cible, le hors-périmètre (pas d'auth, pas de multi-utilisateur) et les critères d'acceptation.
+
+État actuel : squelette `create-next-app` uniquement (`src/app/layout.tsx`, `page.tsx`, `globals.css`). Pas encore de base de données, de shadcn, ni de framework de tests.
+
+## Commandes
+
+Gestionnaire de paquets : pnpm (`packageManager` épinglé dans `package.json`).
+
+```bash
+pnpm dev     # serveur de dev sur http://localhost:3000
+pnpm build   # build de production
+pnpm start   # sert le build
+pnpm lint    # ESLint (flat config, eslint-config-next core-web-vitals + typescript)
+```
+
+Aucun script de test n'existe encore. `INTENT.md` exige des tests unitaires sur les règles métier : il faudra en ajouter un (et documenter ici comment lancer un test isolé).
+
+## Stack et particularités
+
+- Next.js 16.4 (App Router, dossier `src/app`), React 19.3, TypeScript strict. Alias `@/*` → `src/*`.
+- Cette version de Next diffère des connaissances d'entraînement : consulter `node_modules/next/dist/docs/` (01-app, 03-architecture…) avant d'écrire du code Next.
+- `next.config.ts` active `cacheComponents` et `partialPrefetching` : en tenir compte pour le rendu et la mise en cache des données.
+- Tailwind CSS v4 chargé via un loader Turbopack (`@tailwindcss/turbopack` déclaré dans `next.config.ts`), pas via PostCSS. `globals.css` fait `@import "tailwindcss"`.
+- Les types globaux de routes (ex. `LayoutProps<"/">`) sont générés par Next dans `.next/types`.
+- `pnpm-workspace.yaml` bloque les scripts de build de `sharp` et `unrs-resolver` (`allowBuilds: false`).
+
+## Architecture cible (INTENT.md)
+
+Trois couches : présentation → service → données.
+- Seule la couche données accède à la base : SQLite en local, Turso en production (décision actée).
+- Passer de SQLite à Turso ne doit modifier que la couche données : garder la couche service indépendante du driver.
+- Les règles métier vivent dans la couche service et sont couvertes par des tests unitaires.
+- UI en composants shadcn, déploiement sur Vercel.
