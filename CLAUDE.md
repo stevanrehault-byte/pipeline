@@ -10,7 +10,7 @@ Lis INTENT.md avant tout travail.
 
 Mini CRM de prospection mono-utilisateur. `INTENT.md` fixe le produit, l'architecture cible, le hors-périmètre (pas d'auth, pas de multi-utilisateur) et les critères d'acceptation.
 
-État actuel : squelette `create-next-app` uniquement (`src/app/layout.tsx`, `page.tsx`, `globals.css`). Pas encore de base de données, de shadcn, ni de framework de tests.
+État actuel : squelette `create-next-app` + architecture 3 couches avec un exemple vide par couche (`example-*`). Pas encore de base de données ni de shadcn.
 
 ## Commandes
 
@@ -21,9 +21,14 @@ pnpm dev     # serveur de dev sur http://localhost:3000
 pnpm build   # build de production
 pnpm start   # sert le build
 pnpm lint    # ESLint (flat config, eslint-config-next core-web-vitals + typescript)
+pnpm test    # Vitest, une passe (vitest run)
+pnpm test src/services/example-service.test.ts   # un seul fichier
+pnpm test -t "nom du test"                        # filtrer par nom
 ```
 
-Aucun script de test n'existe encore. `INTENT.md` exige des tests unitaires sur les règles métier : il faudra en ajouter un (et documenter ici comment lancer un test isolé).
+- Node ≥ 22.12 requis (Vitest 5 / Vite 8). Sous Node 20, Vitest plante au démarrage et pnpm ignore le binaire natif de rolldown ; après changement de Node, `pnpm install --force`.
+- Tests à côté du code (`*.test.ts(x)` dans `src/`), environnement `node`. Config : `vitest.config.mts` (en `.mts` pour éviter l'avertissement ESM de Vite ; il redéclare l'alias `@`).
+- Les composants se testent avec `renderToStaticMarkup` de `react-dom/server` (pas de jsdom ni Testing Library pour l'instant).
 
 ## Stack et particularités
 
@@ -34,9 +39,10 @@ Aucun script de test n'existe encore. `INTENT.md` exige des tests unitaires sur 
 - Les types globaux de routes (ex. `LayoutProps<"/">`) sont générés par Next dans `.next/types`.
 - `pnpm-workspace.yaml` bloque les scripts de build de `sharp` et `unrs-resolver` (`allowBuilds: false`).
 
-## Architecture cible (INTENT.md)
+## Architecture (INTENT.md)
 
-Trois couches : présentation → service → données.
+Trois couches, dépendances dans un seul sens : présentation (`src/app`, `src/components`) → service (`src/services`) → données (`src/data`). Jamais d'import dans l'autre sens.
+- La couche données expose une interface (ex. `ExampleRepository`) et une implémentation. Les services reçoivent le repository en paramètre (`createExampleService(repo)`), ce qui permet de les tester avec un faux repository.
 - Seule la couche données accède à la base : SQLite en local, Turso en production (décision actée).
 - Passer de SQLite à Turso ne doit modifier que la couche données : garder la couche service indépendante du driver.
 - Les règles métier vivent dans la couche service et sont couvertes par des tests unitaires.
