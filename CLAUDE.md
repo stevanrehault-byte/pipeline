@@ -10,7 +10,7 @@ Lis INTENT.md avant tout travail.
 
 Mini CRM de prospection mono-utilisateur. `INTENT.md` fixe le produit, l'architecture cible, le hors-périmètre (pas d'auth, pas de multi-utilisateur) et les critères d'acceptation.
 
-État actuel : squelette `create-next-app` + architecture 3 couches avec un exemple vide par couche (`example-*`). Pas encore de base de données ni de shadcn.
+État actuel : squelette `create-next-app` + architecture 3 couches avec un exemple vide par couche (`example-*`). shadcn installé (seul composant : `button`). Pas encore de base de données.
 
 ## Commandes
 
@@ -37,6 +37,8 @@ pnpm test -t "nom du test"                        # filtrer par nom
 - `next.config.ts` active `cacheComponents` et `partialPrefetching` : en tenir compte pour le rendu et la mise en cache des données.
 - Tailwind CSS v4 chargé via un loader Turbopack (`@tailwindcss/turbopack` déclaré dans `next.config.ts`), pas via PostCSS. `globals.css` fait `@import "tailwindcss"`.
 - Les types globaux de routes (ex. `LayoutProps<"/">`) sont générés par Next dans `.next/types`.
+- shadcn (préréglage `base-nova`, composants sur `@base-ui/react`, pas Radix). Ajouter un composant : `pnpm dlx shadcn@latest add <nom>` → `src/components/ui`. `cn()` vient du paquet `cn` (pas clsx/tailwind-merge). Après une commande shadcn qui touche `globals.css`, vérifier que `--font-sans` pointe sur `var(--font-geist-sans)` (l'init l'avait rendu circulaire).
+- Si un changement CSS n'apparaît pas dans le build, le cache Turbopack peut être périmé : supprimer `.next` et rebuilder.
 - `pnpm-workspace.yaml` bloque les scripts de build de `sharp` et `unrs-resolver` (`allowBuilds: false`).
 
 ## Architecture (INTENT.md)
