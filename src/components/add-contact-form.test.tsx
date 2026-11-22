@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AddContactForm } from "@/components/add-contact-form";
 
-const noopAction = async () => ({ error: null });
+const emptyState = { error: null, values: { name: "", company: "" } };
+const noopAction = async () => emptyState;
 
 describe("AddContactForm", () => {
   it("propose un champ nom, un champ entreprise et un bouton Ajouter", () => {
@@ -20,7 +21,10 @@ describe("AddContactForm", () => {
     const html = renderToStaticMarkup(
       <AddContactForm
         action={noopAction}
-        initialState={{ error: "Le nom est obligatoire." }}
+        initialState={{
+          error: "Le nom est obligatoire.",
+          values: { name: "", company: "" },
+        }}
       />,
     );
 
@@ -28,5 +32,21 @@ describe("AddContactForm", () => {
     expect(html).toMatch(/<input[^>]*name="name"[^>]*aria-invalid="true"|<input[^>]*aria-invalid="true"[^>]*name="name"/);
     expect(html).toMatch(/aria-describedby="name-error"/);
     expect(html).toMatch(/id="name-error"/);
+  });
+
+  it("garde l'entreprise saisie quand le nom manque", () => {
+    const html = renderToStaticMarkup(
+      <AddContactForm
+        action={noopAction}
+        initialState={{
+          error: "Le nom est obligatoire.",
+          values: { name: "", company: "Boulangerie Martin" },
+        }}
+      />,
+    );
+
+    expect(html).toMatch(
+      /<input[^>]*name="company"[^>]*value="Boulangerie Martin"|<input[^>]*value="Boulangerie Martin"[^>]*name="company"/,
+    );
   });
 });

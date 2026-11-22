@@ -8,7 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type AddContactState = { error: string | null };
+type AddContactState = {
+  error: string | null;
+  values: { name: string; company: string };
+};
+
+const emptyState: AddContactState = { error: null, values: { name: "", company: "" } };
 
 type AddContactFormProps = {
   action: (state: AddContactState, formData: FormData) => Promise<AddContactState>;
@@ -17,7 +22,7 @@ type AddContactFormProps = {
 
 export function AddContactForm({
   action,
-  initialState = { error: null },
+  initialState = emptyState,
 }: AddContactFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const nameError = state.error;
@@ -33,6 +38,7 @@ export function AddContactForm({
         <Input
           id="name"
           name="name"
+          defaultValue={state.values.name}
           autoComplete="off"
           aria-invalid={nameError ? true : undefined}
           aria-describedby={nameError ? "name-error" : undefined}
@@ -49,7 +55,12 @@ export function AddContactForm({
           Entreprise{" "}
           <span className="font-normal text-muted-foreground">(facultatif)</span>
         </Label>
-        <Input id="company" name="company" autoComplete="off" />
+        <Input
+          id="company"
+          name="company"
+          defaultValue={state.values.company}
+          autoComplete="off"
+        />
       </div>
 
       <Button
