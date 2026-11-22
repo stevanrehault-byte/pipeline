@@ -10,7 +10,9 @@ Lis INTENT.md avant tout travail.
 
 Mini CRM de prospection mono-utilisateur. `INTENT.md` fixe le produit, l'architecture cible, le hors-périmètre (pas d'auth, pas de multi-utilisateur) et les critères d'acceptation.
 
-État actuel : squelette `create-next-app` + architecture 3 couches avec un exemple vide par couche (`example-*`). shadcn installé (seul composant : `button`), thème « Départs » appliqué. `src/app/page.tsx` est une page provisoire de démonstration du thème. Pas encore de base de données.
+État actuel : lot 1 de `lots.md` fait (ajouter un contact, le retrouver dans la liste). Les lots sont aussi des issues GitHub (label `lot`, skill `backlog`). shadcn : `button`, `input`, `label` ; thème « Départs » appliqué. Règles par couche dans `.claude/rules/`.
+
+Base : `@libsql/client`, URL dans `DATABASE_URL` (fichier `.env.local` non versionné, `DATABASE_URL=file:pipeline.db` en local ; `libsql://…` + `DATABASE_AUTH_TOKEN` pour Turso). Sans `DATABASE_URL`, l'app refuse de démarrer. Le schéma est créé par `CREATE TABLE IF NOT EXISTS` dans `src/data/db.ts` (pas encore d'outil de migration). Les fichiers `*.db` sont ignorés par git.
 
 ## Commandes
 
@@ -22,7 +24,7 @@ pnpm build   # build de production
 pnpm start   # sert le build
 pnpm lint    # ESLint (flat config, eslint-config-next core-web-vitals + typescript)
 pnpm test    # Vitest, une passe (vitest run)
-pnpm test src/services/example-service.test.ts   # un seul fichier
+pnpm test src/services/contact-service.test.ts   # un seul fichier
 pnpm test -t "nom du test"                        # filtrer par nom
 ```
 
@@ -46,7 +48,8 @@ pnpm test -t "nom du test"                        # filtrer par nom
 ## Architecture (INTENT.md)
 
 Trois couches, dépendances dans un seul sens : présentation (`src/app`, `src/components`) → service (`src/services`) → données (`src/data`). Jamais d'import dans l'autre sens.
-- La couche données expose une interface (ex. `ExampleRepository`) et une implémentation. Les services reçoivent le repository en paramètre (`createExampleService(repo)`), ce qui permet de les tester avec un faux repository.
+- La couche données expose une interface (ex. `ContactRepository`) et une implémentation (`createLibsqlContactRepository(client)`). Les services reçoivent le repository en paramètre (`createContactService(repo)`), ce qui permet de les tester avec un faux repository ; le fichier de service exporte aussi l'instance branchée (`contactService`) utilisée par l'app.
+- Mutations : Server Actions dans `src/app/actions.ts`, qui appellent le service puis `refresh()` de `next/cache`. Les lectures de la base se font dans un composant serveur sous `<Suspense>` (obligatoire avec `cacheComponents`).
 - Seule la couche données accède à la base : SQLite en local, Turso en production (décision actée).
 - Passer de SQLite à Turso ne doit modifier que la couche données : garder la couche service indépendante du driver.
 - Les règles métier vivent dans la couche service et sont couvertes par des tests unitaires.
