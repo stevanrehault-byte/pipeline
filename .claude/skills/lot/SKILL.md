@@ -29,10 +29,12 @@ Argument : le numéro du lot ($ARGUMENTS).
 - Chaque critère a son test.
 - La sortie rouge a été vue avant le code.
 - Les règles de .claude/rules/ sont respectées.
+- `pnpm lint` et `pnpm build` passent. Le build peut révéler ce que les tests ne voient pas (ex. une page figée au build).
+- Test à la main : lance `pnpm dev`, donne-moi les gestes à faire pour chaque critère visible à l'écran, et attends mon retour. Pour la persistance, redémarre le serveur et vérifie que les données sont toujours là.
 
 ## 5. Ouvrir la PR
-- Une fois tous les tests verts, ouvre la PR de dev vers main (`gh pr create`) et donne-moi le lien.
-- Dans le corps : les critères cochés, le test de chaque critère, la sortie rouge puis la sortie verte de `pnpm test`.
+- Une fois tous les tests verts et mon test à la main validé, ouvre la PR de dev vers main (`gh pr create`) et donne-moi le lien.
+- Dans le corps : `Closes #N` (N = numéro de l'issue du lot, voir `gh issue list --label lot`), les critères cochés, le test de chaque critère, la sortie rouge puis la sortie verte de `pnpm test`.
 
 ## Nomenclature des commits
 - `feat(lot-N): <titre du lot>` : un lot.
