@@ -1,0 +1,62 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "design-options.html"
+        ],
+        "createdAt": "2026-11-22T06:58:19.036Z",
+        "reason": "agent: design-options.html is a specimen sheet; each system panel frames its own demo contact card, not a nested product card"
+      },
+      {
+        "rule": "repeating-stripes-gradient",
+        "value": "*",
+        "files": [
+          "design-options.html"
+        ],
+        "createdAt": "2026-11-22T06:58:19.055Z",
+        "reason": "agent: functional ruled lines of the bristol card (system C signature), text sits on the 28px rule"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "design-options.html"
+        ],
+        "createdAt": "2026-11-22T07:19:08.650Z",
+        "reason": "agent: design-options.html is the comparison sheet of three candidate systems (B and C were not chosen); it predates DESIGN.md and intentionally shows values outside it"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "design-options.html"
+        ],
+        "createdAt": "2026-11-22T07:19:08.669Z",
+        "reason": "agent: design-options.html is the comparison sheet of three candidate systems (B and C were not chosen); it predates DESIGN.md and intentionally shows values outside it"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "design-options.html"
+        ],
+        "createdAt": "2026-11-22T07:19:08.687Z",
+        "reason": "agent: design-options.html is the comparison sheet of three candidate systems (B and C were not chosen); it predates DESIGN.md and intentionally shows values outside it"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "design-options.html"
+        ],
+        "createdAt": "2026-11-22T07:19:08.705Z",
+        "reason": "agent: design-options.html is the comparison sheet of three candidate systems (B and C were not chosen); it predates DESIGN.md and intentionally shows values outside it"
+      }
+    ]
+  }
+}

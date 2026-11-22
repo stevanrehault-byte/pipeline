@@ -7,7 +7,7 @@ Je note mes contacts, je les fais avancer d'étape en étape, je sais qui relanc
 ## Architecture
 Une architecture en 3 couches : présentation, service, données.
 Seule la couche données parle à la base.
-Une base légère type SQLite, facilement migrable vers un service managé comme Turso.
+Une base légère compatible SQLite en local, Turso en production.
 Les règles métier ont des tests unitaires.
 
 ## Contraintes

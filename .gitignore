@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# impeccable (captures d'écran de revue)
+.impeccable/review/
+
+# base SQLite locale (données réelles, jamais versionnées)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
