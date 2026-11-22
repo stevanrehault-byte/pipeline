@@ -10,7 +10,7 @@ Lis INTENT.md avant tout travail.
 
 Mini CRM de prospection mono-utilisateur. `INTENT.md` fixe le produit, l'architecture cible, le hors-périmètre (pas d'auth, pas de multi-utilisateur) et les critères d'acceptation.
 
-État actuel : squelette `create-next-app` + architecture 3 couches avec un exemple vide par couche (`example-*`). shadcn installé (seul composant : `button`). Pas encore de base de données.
+État actuel : squelette `create-next-app` + architecture 3 couches avec un exemple vide par couche (`example-*`). shadcn installé (seul composant : `button`), thème « Départs » appliqué. `src/app/page.tsx` est une page provisoire de démonstration du thème. Pas encore de base de données.
 
 ## Commandes
 
@@ -37,7 +37,9 @@ pnpm test -t "nom du test"                        # filtrer par nom
 - `next.config.ts` active `cacheComponents` et `partialPrefetching` : en tenir compte pour le rendu et la mise en cache des données.
 - Tailwind CSS v4 chargé via un loader Turbopack (`@tailwindcss/turbopack` déclaré dans `next.config.ts`), pas via PostCSS. `globals.css` fait `@import "tailwindcss"`.
 - Les types globaux de routes (ex. `LayoutProps<"/">`) sont générés par Next dans `.next/types`.
-- shadcn (préréglage `base-nova`, composants sur `@base-ui/react`, pas Radix). Ajouter un composant : `pnpm dlx shadcn@latest add <nom>` → `src/components/ui`. `cn()` vient du paquet `cn` (pas clsx/tailwind-merge). Après une commande shadcn qui touche `globals.css`, vérifier que `--font-sans` pointe sur `var(--font-geist-sans)` (l'init l'avait rendu circulaire).
+- shadcn (préréglage `base-nova`, composants sur `@base-ui/react`, pas Radix). Ajouter un composant : `pnpm dlx shadcn@latest add <nom>` → `src/components/ui`. `cn()` vient du paquet `cn` (pas clsx/tailwind-merge). Après une commande shadcn qui touche `globals.css`, vérifier que `--font-sans` pointe sur `var(--font-barlow)` et `--font-heading` sur `var(--font-barlow-condensed)` (l'init avait rendu `--font-sans` circulaire), et que shadcn n'a pas réintroduit de bloc `.dark` ni de couleurs `oklch` par défaut.
+- Design : lire `DESIGN.md` (système « Départs ») et `PRODUCT.md` avant tout travail d'interface. Thème unique sombre : les couleurs sont dans `:root`, et `<html>` porte la classe `dark` pour que les variantes `dark:` de shadcn s'appliquent. Utiliser les tokens (`bg-primary`, `text-muted-foreground`…), jamais de couleurs Tailwind codées en dur. L'ambre (`primary`) est réservé à l'action et à l'attention.
+- Plugin Impeccable : `.impeccable/config.json` est versionné ; `design-options.html` est la planche des trois pistes (A retenue).
 - Si un changement CSS n'apparaît pas dans le build, le cache Turbopack peut être périmé : supprimer `.next` et rebuilder.
 - `pnpm-workspace.yaml` bloque les scripts de build de `sharp` et `unrs-resolver` (`allowBuilds: false`).
 
