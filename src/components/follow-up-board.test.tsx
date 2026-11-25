@@ -4,7 +4,7 @@ import { FollowUpBoard } from "@/components/follow-up-board";
 import type { Contact } from "@/data/contact-repository";
 import type { DueFollowUp } from "@/services/follow-ups";
 
-const noop = async () => {};
+const noop = async () => ({ error: null });
 
 function due(lateDays: number, overrides: Partial<Contact> = {}): DueFollowUp {
   return {

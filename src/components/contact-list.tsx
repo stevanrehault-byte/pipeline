@@ -5,20 +5,25 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RowActionForm } from "@/components/row-action-form";
 import { STAGE_LABELS, StageBadge } from "@/components/stage-badge";
 import type { Contact } from "@/data/contact-repository";
 import { formatFollowUp } from "@/services/follow-ups";
 import { nextStage } from "@/services/stages";
 
-type StageAction = (id: string) => Promise<void>;
+type RowActionState = { error: string | null };
 
-type ScheduleAction = (id: string, formData: FormData) => Promise<void>;
+type RowAction = (
+  id: string,
+  state: RowActionState,
+  formData: FormData,
+) => Promise<RowActionState>;
 
 type ContactListProps = {
   contacts: Contact[];
-  advanceAction: StageAction;
-  markLostAction: StageAction;
-  scheduleAction: ScheduleAction;
+  advanceAction: RowAction;
+  markLostAction: RowAction;
+  scheduleAction: RowAction;
 };
 
 export function ContactList({
@@ -64,7 +69,7 @@ export function ContactList({
 
             {next && (
               <div className="flex flex-wrap gap-2">
-                <form action={advanceAction.bind(null, contact.id)}>
+                <RowActionForm action={advanceAction.bind(null, contact.id)}>
                   <Button
                     type="submit"
                     size="sm"
@@ -74,8 +79,8 @@ export function ContactList({
                   >
                     {`Passer à « ${STAGE_LABELS[next]} »`}
                   </Button>
-                </form>
-                <form action={markLostAction.bind(null, contact.id)}>
+                </RowActionForm>
+                <RowActionForm action={markLostAction.bind(null, contact.id)}>
                   <Button
                     type="submit"
                     size="sm"
@@ -85,12 +90,12 @@ export function ContactList({
                   >
                     Perdu
                   </Button>
-                </form>
+                </RowActionForm>
               </div>
             )}
 
             {next && (
-              <form
+              <RowActionForm
                 action={scheduleAction.bind(null, contact.id)}
                 className="flex flex-wrap items-end gap-2"
               >
@@ -111,7 +116,7 @@ export function ContactList({
                 >
                   Programmer
                 </Button>
-              </form>
+              </RowActionForm>
             )}
           </li>
         );

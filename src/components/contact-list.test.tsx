@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ContactList } from "@/components/contact-list";
 import type { Contact, Stage } from "@/data/contact-repository";
 
-const noop = async () => {};
+const noop = async () => ({ error: null });
 
 function contact(overrides: Partial<Contact> = {}): Contact {
   return {

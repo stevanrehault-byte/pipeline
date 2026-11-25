@@ -2,11 +2,16 @@
 // celles en retard, déjà calculées et triées par la couche service.
 
 import { Button } from "@/components/ui/button";
+import { RowActionForm } from "@/components/row-action-form";
 import type { DueFollowUp } from "@/services/follow-ups";
 
 type FollowUpBoardProps = {
   items: DueFollowUp[];
-  completeAction: (id: string) => Promise<void>;
+  completeAction: (
+    id: string,
+    state: { error: string | null },
+    formData: FormData,
+  ) => Promise<{ error: string | null }>;
 };
 
 function Status({ lateDays }: { lateDays: number }) {
@@ -75,7 +80,7 @@ export function FollowUpBoard({ items, completeAction }: FollowUpBoardProps) {
                   <Status lateDays={lateDays} />
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <form action={completeAction.bind(null, contact.id)}>
+                  <RowActionForm action={completeAction.bind(null, contact.id)}>
                     <Button
                       type="submit"
                       size="sm"
@@ -84,7 +89,7 @@ export function FollowUpBoard({ items, completeAction }: FollowUpBoardProps) {
                     >
                       Fait
                     </Button>
-                  </form>
+                  </RowActionForm>
                 </td>
               </tr>
             );

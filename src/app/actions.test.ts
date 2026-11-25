@@ -89,6 +89,8 @@ describe("addContactAction", () => {
   });
 });
 
+const idle = { error: null };
+
 describe("actions d'étape", () => {
   beforeEach(() => {
     advanceContact.mockReset();
@@ -99,19 +101,39 @@ describe("actions d'étape", () => {
   it("fait avancer le contact puis rafraîchit la liste", async () => {
     advanceContact.mockResolvedValue({ ok: true });
 
-    await advanceContactAction("c1");
+    const state = await advanceContactAction("c1");
 
     expect(advanceContact).toHaveBeenCalledWith("c1");
     expect(refresh).toHaveBeenCalled();
+    expect(state).toEqual(idle);
+  });
+
+  it("renvoie l'erreur sans rafraîchir quand le contact ne peut pas avancer", async () => {
+    advanceContact.mockResolvedValue({ ok: false, error: "Contact introuvable." });
+
+    const state = await advanceContactAction("c1");
+
+    expect(state).toEqual({ error: "Contact introuvable." });
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("marque le contact perdu puis rafraîchit la liste", async () => {
     markContactLost.mockResolvedValue({ ok: true });
 
-    await markContactLostAction("c1");
+    const state = await markContactLostAction("c1");
 
     expect(markContactLost).toHaveBeenCalledWith("c1");
     expect(refresh).toHaveBeenCalled();
+    expect(state).toEqual(idle);
+  });
+
+  it("renvoie l'erreur sans rafraîchir quand le contact ne peut pas être marqué perdu", async () => {
+    markContactLost.mockResolvedValue({ ok: false, error: "Ce contact ne peut plus avancer." });
+
+    const state = await markContactLostAction("c1");
+
+    expect(state).toEqual({ error: "Ce contact ne peut plus avancer." });
+    expect(refresh).not.toHaveBeenCalled();
   });
 });
 
@@ -125,18 +147,45 @@ describe("actions de relance", () => {
   it("programme la relance saisie puis rafraîchit", async () => {
     scheduleFollowUp.mockResolvedValue({ ok: true });
 
-    await scheduleFollowUpAction("c1", formData({ date: "2026-11-25", time: "09:30" }));
+    const state = await scheduleFollowUpAction(
+      "c1",
+      idle,
+      formData({ date: "2026-11-25", time: "09:30" }),
+    );
 
     expect(scheduleFollowUp).toHaveBeenCalledWith("c1", { date: "2026-11-25", time: "09:30" });
     expect(refresh).toHaveBeenCalled();
+    expect(state).toEqual(idle);
+  });
+
+  it("renvoie l'erreur sans rafraîchir quand la relance est refusée", async () => {
+    scheduleFollowUp.mockResolvedValue({
+      ok: false,
+      error: "Indique une date et une heure valides.",
+    });
+
+    const state = await scheduleFollowUpAction("c1", idle, formData({ date: "", time: "" }));
+
+    expect(state).toEqual({ error: "Indique une date et une heure valides." });
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("marque la relance faite puis rafraîchit", async () => {
     completeFollowUp.mockResolvedValue({ ok: true });
 
-    await completeFollowUpAction("c1");
+    const state = await completeFollowUpAction("c1");
 
     expect(completeFollowUp).toHaveBeenCalledWith("c1");
     expect(refresh).toHaveBeenCalled();
+    expect(state).toEqual(idle);
+  });
+
+  it("renvoie l'erreur sans rafraîchir quand la relance ne peut pas être marquée faite", async () => {
+    completeFollowUp.mockResolvedValue({ ok: false, error: "Contact introuvable." });
+
+    const state = await completeFollowUpAction("c1");
+
+    expect(state).toEqual({ error: "Contact introuvable." });
+    expect(refresh).not.toHaveBeenCalled();
   });
 });
