@@ -3,19 +3,30 @@
 // avancer) viennent de la couche service.
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { STAGE_LABELS, StageBadge } from "@/components/stage-badge";
 import type { Contact } from "@/data/contact-repository";
+import { formatFollowUp } from "@/services/follow-ups";
 import { nextStage } from "@/services/stages";
 
 type StageAction = (id: string) => Promise<void>;
+
+type ScheduleAction = (id: string, formData: FormData) => Promise<void>;
 
 type ContactListProps = {
   contacts: Contact[];
   advanceAction: StageAction;
   markLostAction: StageAction;
+  scheduleAction: ScheduleAction;
 };
 
-export function ContactList({ contacts, advanceAction, markLostAction }: ContactListProps) {
+export function ContactList({
+  contacts,
+  advanceAction,
+  markLostAction,
+  scheduleAction,
+}: ContactListProps) {
   if (contacts.length === 0) {
     return (
       <p className="rounded-md border border-dashed border-border px-5 py-8 text-center text-muted-foreground">
@@ -44,6 +55,14 @@ export function ContactList({ contacts, advanceAction, markLostAction }: Contact
             </div>
 
             {next && (
+              <p className="text-sm text-muted-foreground tabular-nums">
+                {contact.followUpAt
+                  ? `Relance : ${formatFollowUp(contact.followUpAt)}`
+                  : "Aucune relance prévue"}
+              </p>
+            )}
+
+            {next && (
               <div className="flex flex-wrap gap-2">
                 <form action={advanceAction.bind(null, contact.id)}>
                   <Button
@@ -68,6 +87,31 @@ export function ContactList({ contacts, advanceAction, markLostAction }: Contact
                   </Button>
                 </form>
               </div>
+            )}
+
+            {next && (
+              <form
+                action={scheduleAction.bind(null, contact.id)}
+                className="flex flex-wrap items-end gap-2"
+              >
+                <div className="grid gap-1">
+                  <Label htmlFor={`date-${contact.id}`}>Date</Label>
+                  <Input id={`date-${contact.id}`} name="date" type="date" required />
+                </div>
+                <div className="grid gap-1">
+                  <Label htmlFor={`time-${contact.id}`}>Heure de Paris</Label>
+                  <Input id={`time-${contact.id}`} name="time" type="time" required />
+                </div>
+                <Button
+                  type="submit"
+                  size="sm"
+                  variant="outline"
+                  aria-label={`Programmer une relance pour ${contact.name}`}
+                  className="font-heading uppercase tracking-wider"
+                >
+                  Programmer
+                </Button>
+              </form>
             )}
           </li>
         );

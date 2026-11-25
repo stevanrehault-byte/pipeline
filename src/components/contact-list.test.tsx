@@ -11,6 +11,7 @@ function contact(overrides: Partial<Contact> = {}): Contact {
     name: "Camille Martin",
     company: "Boulangerie Martin",
     stage: "a_contacter",
+    followUpAt: null,
     createdAt: "2026-11-22T10:00:00.000Z",
     ...overrides,
   };
@@ -18,7 +19,12 @@ function contact(overrides: Partial<Contact> = {}): Contact {
 
 function render(contacts: Contact[]) {
   return renderToStaticMarkup(
-    <ContactList contacts={contacts} advanceAction={noop} markLostAction={noop} />,
+    <ContactList
+      contacts={contacts}
+      advanceAction={noop}
+      markLostAction={noop}
+      scheduleAction={noop}
+    />,
   );
 }
 
@@ -70,4 +76,22 @@ describe("ContactList", () => {
       expect(html).not.toContain("Passer à");
     },
   );
+
+  it("affiche la prochaine relance en heure de Paris", () => {
+    const html = render([contact({ stage: "contacte", followUpAt: "2026-11-25T09:30" })]);
+
+    expect(html).toContain("25/11 · 09:30 (heure de Paris)");
+  });
+
+  it("propose de programmer une relance (date et heure)", () => {
+    const html = renderAt("contacte");
+
+    expect(html).toMatch(/<input[^>]*type="date"/);
+    expect(html).toMatch(/<input[^>]*type="time"/);
+    expect(html).toContain("Programmer");
+  });
+
+  it("indique qu'aucune relance n'est prévue", () => {
+    expect(renderAt("contacte")).toContain("Aucune relance prévue");
+  });
 });

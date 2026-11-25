@@ -7,6 +7,7 @@ import {
   type ContactRepository,
 } from "@/data/contact-repository";
 import { INITIAL_STAGE, canAdvance, nextStage } from "@/services/stages";
+import { dueFollowUps, toFollowUp } from "@/services/follow-ups";
 
 export type AddContactInput = { name: string; company: string };
 
@@ -16,8 +17,12 @@ export type AddContactResult =
 
 export type StageChangeResult = { ok: true } | { ok: false; error: string };
 
+export type FollowUpInput = { date: string; time: string };
+
 const NOT_FOUND = "Contact introuvable.";
 const FINAL = "Ce contact ne peut plus avancer.";
+const INVALID_FOLLOW_UP = "Indique une date et une heure valides.";
+const NO_FOLLOW_UP = "Ce contact n'a pas de relance prévue.";
 
 export function createContactService(repository: ContactRepository) {
   return {
@@ -50,6 +55,29 @@ export function createContactService(repository: ContactRepository) {
       if (!canAdvance(contact.stage)) return { ok: false, error: FINAL };
       await repository.updateStage(id, "perdu");
       return { ok: true };
+    },
+
+    // Une seule prochaine relance par contact : la nouvelle remplace l'ancienne.
+    async scheduleFollowUp(id: string, input: FollowUpInput): Promise<StageChangeResult> {
+      const followUpAt = toFollowUp(input.date, input.time);
+      if (!followUpAt) return { ok: false, error: INVALID_FOLLOW_UP };
+      const contact = await repository.findById(id);
+      if (!contact) return { ok: false, error: NOT_FOUND };
+      await repository.updateFollowUp(id, followUpAt);
+      return { ok: true };
+    },
+
+    // Relance faite : le contact n'a plus de prochaine relance.
+    async completeFollowUp(id: string): Promise<StageChangeResult> {
+      const contact = await repository.findById(id);
+      if (!contact) return { ok: false, error: NOT_FOUND };
+      if (!contact.followUpAt) return { ok: false, error: NO_FOLLOW_UP };
+      await repository.updateFollowUp(id, null);
+      return { ok: true };
+    },
+
+    async listDueToday(now: Date) {
+      return dueFollowUps(await repository.list(), now);
     },
   };
 }

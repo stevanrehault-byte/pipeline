@@ -1,21 +1,38 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { addContact, advanceContact, markContactLost, refresh } = vi.hoisted(() => ({
+const {
+  addContact,
+  advanceContact,
+  markContactLost,
+  scheduleFollowUp,
+  completeFollowUp,
+  refresh,
+} = vi.hoisted(() => ({
   addContact: vi.fn(),
   advanceContact: vi.fn(),
   markContactLost: vi.fn(),
+  scheduleFollowUp: vi.fn(),
+  completeFollowUp: vi.fn(),
   refresh: vi.fn(),
 }));
 
 vi.mock("@/services/contact-service", () => ({
-  contactService: { addContact, advanceContact, markContactLost },
+  contactService: {
+    addContact,
+    advanceContact,
+    markContactLost,
+    scheduleFollowUp,
+    completeFollowUp,
+  },
 }));
 vi.mock("next/cache", () => ({ refresh }));
 
 import {
   addContactAction,
   advanceContactAction,
+  completeFollowUpAction,
   markContactLostAction,
+  scheduleFollowUpAction,
 } from "@/app/actions";
 
 const emptyState = { error: null, values: { name: "", company: "" } };
@@ -94,6 +111,32 @@ describe("actions d'étape", () => {
     await markContactLostAction("c1");
 
     expect(markContactLost).toHaveBeenCalledWith("c1");
+    expect(refresh).toHaveBeenCalled();
+  });
+});
+
+describe("actions de relance", () => {
+  beforeEach(() => {
+    scheduleFollowUp.mockReset();
+    completeFollowUp.mockReset();
+    refresh.mockReset();
+  });
+
+  it("programme la relance saisie puis rafraîchit", async () => {
+    scheduleFollowUp.mockResolvedValue({ ok: true });
+
+    await scheduleFollowUpAction("c1", formData({ date: "2026-11-25", time: "09:30" }));
+
+    expect(scheduleFollowUp).toHaveBeenCalledWith("c1", { date: "2026-11-25", time: "09:30" });
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("marque la relance faite puis rafraîchit", async () => {
+    completeFollowUp.mockResolvedValue({ ok: true });
+
+    await completeFollowUpAction("c1");
+
+    expect(completeFollowUp).toHaveBeenCalledWith("c1");
     expect(refresh).toHaveBeenCalled();
   });
 });

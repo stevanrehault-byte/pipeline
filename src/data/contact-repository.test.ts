@@ -115,4 +115,39 @@ describe("ContactRepository (libsql)", () => {
 
     expect(reloaded?.stage).toBe("proposition_envoyee");
   });
+
+  it("crée un contact sans relance", async () => {
+    const client = await createDbClient(":memory:");
+    const repo = createLibsqlContactRepository(client);
+
+    const created = await repo.create({ name: "Camille Martin", company: null, stage: "a_contacter" });
+
+    expect(created.followUpAt).toBeNull();
+    expect((await repo.list())[0].followUpAt).toBeNull();
+    client.close();
+  });
+
+  it("enregistre la relance, la retrouve après redémarrage, puis l'efface", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "pipeline-test-"));
+    tempDirs.push(dir);
+    const url = `file:${join(dir, "test.db")}`;
+
+    const first = await createDbClient(url);
+    const repo = createLibsqlContactRepository(first);
+    const created = await repo.create({ name: "Camille Martin", company: null, stage: "contacte" });
+    await repo.updateFollowUp(created.id, "2026-11-25T09:30");
+    first.close();
+
+    const second = await createDbClient(url);
+    const reopened = createLibsqlContactRepository(second);
+    expect((await reopened.findById(created.id))?.followUpAt).toBe("2026-11-25T09:30");
+
+    await reopened.updateFollowUp(created.id, null);
+    second.close();
+
+    const third = await createDbClient(url);
+    const cleared = await createLibsqlContactRepository(third).findById(created.id);
+    third.close();
+    expect(cleared?.followUpAt).toBeNull();
+  });
 });

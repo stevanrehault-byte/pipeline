@@ -2,12 +2,17 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
 vi.mock("@/services/contact-service", () => ({
-  contactService: { listContacts: vi.fn(async () => []) },
+  contactService: {
+    listContacts: vi.fn(async () => []),
+    listDueToday: vi.fn(async () => []),
+  },
 }));
 vi.mock("@/app/actions", () => ({
   addContactAction: vi.fn(),
   advanceContactAction: vi.fn(),
   markContactLostAction: vi.fn(),
+  scheduleFollowUpAction: vi.fn(),
+  completeFollowUpAction: vi.fn(),
 }));
 
 import Home from "@/app/page";
@@ -26,5 +31,9 @@ describe("page d'accueil", () => {
 
   it("ne montre plus le contact fictif de la démo", () => {
     expect(html).not.toContain("Camille Martin");
+  });
+
+  it("ouvre sur le tableau des relances du jour", () => {
+    expect(html).toContain("À relancer aujourd&#x27;hui");
   });
 });

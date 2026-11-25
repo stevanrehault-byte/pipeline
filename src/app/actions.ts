@@ -38,3 +38,16 @@ export async function markContactLostAction(id: string): Promise<void> {
   await contactService.markContactLost(id);
   refresh();
 }
+
+export async function scheduleFollowUpAction(id: string, formData: FormData): Promise<void> {
+  await contactService.scheduleFollowUp(id, {
+    date: String(formData.get("date") ?? ""),
+    time: String(formData.get("time") ?? ""),
+  });
+  refresh();
+}
+
+export async function completeFollowUpAction(id: string): Promise<void> {
+  await contactService.completeFollowUp(id);
+  refresh();
+}

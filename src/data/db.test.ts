@@ -39,12 +39,12 @@ describe("createDbClient : migration du schéma", () => {
     old.close();
 
     const client = await createDbClient(url);
-    const result = await client.execute("SELECT name, stage FROM contacts");
+    const result = await client.execute("SELECT name, stage, follow_up_at FROM contacts");
     client.close();
 
-    expect(result.rows.map((row) => ({ name: row.name, stage: row.stage }))).toEqual([
-      { name: "stev", stage: "a_contacter" },
-    ]);
+    expect(
+      result.rows.map((row) => ({ name: row.name, stage: row.stage, followUp: row.follow_up_at })),
+    ).toEqual([{ name: "stev", stage: "a_contacter", followUp: null }]);
   });
 
   it("peut rouvrir une base déjà migrée sans erreur", async () => {
@@ -58,5 +58,6 @@ describe("createDbClient : migration du schéma", () => {
     again.close();
 
     expect(columns.rows.map((row) => row.name)).toContain("stage");
+    expect(columns.rows.map((row) => row.name)).toContain("follow_up_at");
   });
 });
