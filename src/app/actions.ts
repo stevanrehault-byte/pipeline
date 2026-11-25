@@ -28,3 +28,13 @@ export async function addContactAction(
   refresh();
   return { error: null, values: { name: "", company: "" } };
 }
+
+export async function advanceContactAction(id: string): Promise<void> {
+  await contactService.advanceContact(id);
+  refresh();
+}
+
+export async function markContactLostAction(id: string): Promise<void> {
+  await contactService.markContactLost(id);
+  refresh();
+}

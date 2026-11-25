@@ -1,6 +1,10 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { addContactAction } from "@/app/actions";
+import {
+  addContactAction,
+  advanceContactAction,
+  markContactLostAction,
+} from "@/app/actions";
 import { AddContactForm } from "@/components/add-contact-form";
 import { ContactList } from "@/components/contact-list";
 import { contactService } from "@/services/contact-service";
@@ -9,7 +13,13 @@ async function Contacts() {
   // Lecture à chaque requête : sans ça, Next figerait la liste au moment du build.
   await connection();
   const contacts = await contactService.listContacts();
-  return <ContactList contacts={contacts} />;
+  return (
+    <ContactList
+      contacts={contacts}
+      advanceAction={advanceContactAction}
+      markLostAction={markContactLostAction}
+    />
+  );
 }
 
 export default function Home() {

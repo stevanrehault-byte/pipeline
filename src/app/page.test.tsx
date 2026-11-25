@@ -4,7 +4,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 vi.mock("@/services/contact-service", () => ({
   contactService: { listContacts: vi.fn(async () => []) },
 }));
-vi.mock("@/app/actions", () => ({ addContactAction: vi.fn() }));
+vi.mock("@/app/actions", () => ({
+  addContactAction: vi.fn(),
+  advanceContactAction: vi.fn(),
+  markContactLostAction: vi.fn(),
+}));
 
 import Home from "@/app/page";
 
