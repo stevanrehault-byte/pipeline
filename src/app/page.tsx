@@ -3,10 +3,13 @@ import { connection } from "next/server";
 import {
   addContactAction,
   advanceContactAction,
+  completeFollowUpAction,
   markContactLostAction,
+  scheduleFollowUpAction,
 } from "@/app/actions";
 import { AddContactForm } from "@/components/add-contact-form";
 import { ContactList } from "@/components/contact-list";
+import { FollowUpBoard } from "@/components/follow-up-board";
 import { contactService } from "@/services/contact-service";
 
 async function Contacts() {
@@ -18,8 +21,15 @@ async function Contacts() {
       contacts={contacts}
       advanceAction={advanceContactAction}
       markLostAction={markContactLostAction}
+      scheduleAction={scheduleFollowUpAction}
     />
   );
+}
+
+async function DueToday() {
+  await connection();
+  const items = await contactService.listDueToday(new Date());
+  return <FollowUpBoard items={items} completeAction={completeFollowUpAction} />;
 }
 
 export default function Home() {
@@ -31,6 +41,20 @@ export default function Home() {
         </h1>
         <p className="text-muted-foreground">Mes contacts de prospection.</p>
       </header>
+
+      <section aria-labelledby="due-title" className="grid gap-3">
+        <h2
+          id="due-title"
+          className="text-2xl font-semibold uppercase leading-tight tracking-wide"
+        >
+          À relancer aujourd&apos;hui
+        </h2>
+        <Suspense
+          fallback={<p className="text-muted-foreground">Chargement des relances…</p>}
+        >
+          <DueToday />
+        </Suspense>
+      </section>
 
       <AddContactForm action={addContactAction} />
 

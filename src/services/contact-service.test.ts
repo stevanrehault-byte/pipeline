@@ -10,6 +10,7 @@ function createFakeRepository(initial: Contact[] = []) {
       const contact: Contact = {
         id: String(contacts.length + 1),
         ...input,
+        followUpAt: null,
         createdAt: "2026-11-22T10:00:00.000Z",
       };
       contacts.push(contact);
@@ -19,6 +20,10 @@ function createFakeRepository(initial: Contact[] = []) {
     updateStage: vi.fn(async (id: string, stage: Stage) => {
       const contact = contacts.find((c) => c.id === id);
       if (contact) contact.stage = stage;
+    }),
+    updateFollowUp: vi.fn(async (id: string, followUpAt: string | null) => {
+      const contact = contacts.find((c) => c.id === id);
+      if (contact) contact.followUpAt = followUpAt;
     }),
   } satisfies ContactRepository;
   return repository;
@@ -30,6 +35,7 @@ function contactAt(stage: Stage): Contact {
     name: "Camille Martin",
     company: null,
     stage,
+    followUpAt: null,
     createdAt: "2026-11-22T10:00:00.000Z",
   };
 }
@@ -161,5 +167,82 @@ describe("contact service", () => {
       error: "Contact introuvable.",
     });
     expect(repository.updateStage).not.toHaveBeenCalled();
+  });
+});
+
+describe("relances (lots 3 à 5)", () => {
+  it("programme une relance à 09:30 heure de Paris, sans conversion", async () => {
+    const repository = createFakeRepository([contactAt("contacte")]);
+    const service = createContactService(repository);
+
+    const result = await service.scheduleFollowUp("c1", { date: "2026-11-25", time: "09:30" });
+
+    expect(result).toEqual({ ok: true });
+    expect(repository.updateFollowUp).toHaveBeenCalledWith("c1", "2026-11-25T09:30");
+  });
+
+  it("remplace la relance précédente : un contact n'en a qu'une", async () => {
+    const repository = createFakeRepository([contactAt("contacte")]);
+    const service = createContactService(repository);
+
+    await service.scheduleFollowUp("c1", { date: "2026-11-25", time: "09:30" });
+    await service.scheduleFollowUp("c1", { date: "2026-11-27", time: "14:00" });
+
+    expect((await repository.findById("c1"))?.followUpAt).toBe("2026-11-27T14:00");
+  });
+
+  it("refuse une date invalide sans rien enregistrer", async () => {
+    const repository = createFakeRepository([contactAt("contacte")]);
+    const service = createContactService(repository);
+
+    const result = await service.scheduleFollowUp("c1", { date: "", time: "09:30" });
+
+    expect(result.ok).toBe(false);
+    expect(repository.updateFollowUp).not.toHaveBeenCalled();
+  });
+
+  it("refuse un contact introuvable", async () => {
+    const repository = createFakeRepository();
+    const service = createContactService(repository);
+
+    const result = await service.scheduleFollowUp("inconnu", { date: "2026-11-25", time: "09:30" });
+
+    expect(result.ok).toBe(false);
+    expect(repository.updateFollowUp).not.toHaveBeenCalled();
+  });
+
+  it("liste les relances dues au jour de Paris", async () => {
+    const repository = createFakeRepository([
+      { ...contactAt("contacte"), id: "hier", followUpAt: "2026-11-24T10:00" },
+      { ...contactAt("contacte"), id: "demain", followUpAt: "2026-11-26T10:00" },
+    ]);
+    const service = createContactService(repository);
+
+    const due = await service.listDueToday(new Date("2026-11-25T16:00:00Z"));
+
+    expect(due.map((d) => d.contact.id)).toEqual(["hier"]);
+  });
+
+  it("marque une relance faite : le contact n'a plus de prochaine relance", async () => {
+    const repository = createFakeRepository([
+      { ...contactAt("contacte"), followUpAt: "2026-11-25T09:30" },
+    ]);
+    const service = createContactService(repository);
+
+    const result = await service.completeFollowUp("c1");
+
+    expect(result).toEqual({ ok: true });
+    expect((await repository.findById("c1"))?.followUpAt).toBeNull();
+    expect(await service.listDueToday(new Date("2026-11-25T16:00:00Z"))).toEqual([]);
+  });
+
+  it("refuse de marquer faite une relance qui n'existe pas", async () => {
+    const repository = createFakeRepository([contactAt("contacte")]);
+    const service = createContactService(repository);
+
+    const result = await service.completeFollowUp("c1");
+
+    expect(result.ok).toBe(false);
+    expect(repository.updateFollowUp).not.toHaveBeenCalled();
   });
 });

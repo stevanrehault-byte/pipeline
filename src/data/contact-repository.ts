@@ -17,6 +17,8 @@ export type Contact = {
   name: string;
   company: string | null;
   stage: Stage;
+  // Prochaine relance, heure de Paris, au format « 2026-11-25T09:30 ». null si aucune.
+  followUpAt: string | null;
   createdAt: string;
 };
 
@@ -27,9 +29,10 @@ export interface ContactRepository {
   create(input: NewContact): Promise<Contact>;
   findById(id: string): Promise<Contact | null>;
   updateStage(id: string, stage: Stage): Promise<void>;
+  updateFollowUp(id: string, followUpAt: string | null): Promise<void>;
 }
 
-const COLUMNS = "id, name, company, stage, created_at";
+const COLUMNS = "id, name, company, stage, follow_up_at, created_at";
 
 function toContact(row: Record<string, unknown>): Contact {
   return {
@@ -37,6 +40,7 @@ function toContact(row: Record<string, unknown>): Contact {
     name: String(row.name),
     company: row.company == null ? null : String(row.company),
     stage: String(row.stage) as Stage,
+    followUpAt: row.follow_up_at == null ? null : String(row.follow_up_at),
     createdAt: String(row.created_at),
   };
 }
@@ -58,6 +62,7 @@ export function createLibsqlContactRepository(
         name,
         company,
         stage,
+        followUpAt: null,
         createdAt: new Date().toISOString(),
       };
       await client.execute({
@@ -82,6 +87,13 @@ export function createLibsqlContactRepository(
         args: [stage, id],
       });
     },
+
+    async updateFollowUp(id, followUpAt) {
+      await client.execute({
+        sql: "UPDATE contacts SET follow_up_at = ? WHERE id = ?",
+        args: [followUpAt, id],
+      });
+    },
   };
 }
 
@@ -98,5 +110,8 @@ export const contactRepository: ContactRepository = {
   },
   async updateStage(id, stage) {
     return createLibsqlContactRepository(await getDb()).updateStage(id, stage);
+  },
+  async updateFollowUp(id, followUpAt) {
+    return createLibsqlContactRepository(await getDb()).updateFollowUp(id, followUpAt);
   },
 };

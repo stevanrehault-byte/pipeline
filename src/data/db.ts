@@ -18,6 +18,9 @@ const MIGRATIONS = [
   )`,
   // v2 (lot 2) : l'étape du pipeline. Les contacts existants passent à « À contacter ».
   `ALTER TABLE contacts ADD COLUMN stage TEXT NOT NULL DEFAULT 'a_contacter'`,
+  // v3 (lot 3) : la prochaine relance, en heure de Paris (« 2026-11-25T09:30 »).
+  // Vide tant qu'aucune relance n'est programmée.
+  `ALTER TABLE contacts ADD COLUMN follow_up_at TEXT`,
 ];
 
 async function migrate(client: Client) {
