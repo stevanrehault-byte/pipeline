@@ -29,25 +29,37 @@ export async function addContactAction(
   return { error: null, values: { name: "", company: "" } };
 }
 
-export async function advanceContactAction(id: string): Promise<void> {
-  await contactService.advanceContact(id);
+// État des formulaires de ligne (avancer, perdu, relance, fait) : le message
+// d'erreur du service, ou null quand tout s'est bien passé.
+export type RowActionState = { error: string | null };
+
+async function settle(result: { ok: true } | { ok: false; error: string }): Promise<RowActionState> {
+  if (!result.ok) return { error: result.error };
   refresh();
+  return { error: null };
 }
 
-export async function markContactLostAction(id: string): Promise<void> {
-  await contactService.markContactLost(id);
-  refresh();
+export async function advanceContactAction(id: string): Promise<RowActionState> {
+  return settle(await contactService.advanceContact(id));
 }
 
-export async function scheduleFollowUpAction(id: string, formData: FormData): Promise<void> {
-  await contactService.scheduleFollowUp(id, {
-    date: String(formData.get("date") ?? ""),
-    time: String(formData.get("time") ?? ""),
-  });
-  refresh();
+export async function markContactLostAction(id: string): Promise<RowActionState> {
+  return settle(await contactService.markContactLost(id));
 }
 
-export async function completeFollowUpAction(id: string): Promise<void> {
-  await contactService.completeFollowUp(id);
-  refresh();
+export async function scheduleFollowUpAction(
+  id: string,
+  _previous: RowActionState,
+  formData: FormData,
+): Promise<RowActionState> {
+  return settle(
+    await contactService.scheduleFollowUp(id, {
+      date: String(formData.get("date") ?? ""),
+      time: String(formData.get("time") ?? ""),
+    }),
+  );
+}
+
+export async function completeFollowUpAction(id: string): Promise<RowActionState> {
+  return settle(await contactService.completeFollowUp(id));
 }
