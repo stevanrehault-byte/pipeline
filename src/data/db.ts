@@ -4,21 +4,41 @@
 
 import { createClient, type Client } from "@libsql/client";
 
-const SCHEMA = `
-  CREATE TABLE IF NOT EXISTS contacts (
+// Versions du schéma, appliquées une seule fois chacune, dans l'ordre.
+// La version courante est stockée dans PRAGMA user_version.
+// Ne jamais modifier une version existante : en ajouter une nouvelle.
+const MIGRATIONS = [
+  // v1 (lot 1) : les contacts. IF NOT EXISTS couvre les bases créées avant
+  // l'arrivée des versions (user_version 0, table déjà présente).
+  `CREATE TABLE IF NOT EXISTS contacts (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     company TEXT,
     created_at TEXT NOT NULL
-  )
-`;
+  )`,
+  // v2 (lot 2) : l'étape du pipeline. Les contacts existants passent à « À contacter ».
+  `ALTER TABLE contacts ADD COLUMN stage TEXT NOT NULL DEFAULT 'a_contacter'`,
+];
+
+async function migrate(client: Client) {
+  const result = await client.execute("PRAGMA user_version");
+  const current = Number(result.rows[0]?.user_version ?? 0);
+
+  for (let version = current; version < MIGRATIONS.length; version++) {
+    // PRAGMA n'accepte pas de paramètre ; la valeur vient du code, jamais d'une saisie.
+    await client.batch(
+      [MIGRATIONS[version], `PRAGMA user_version = ${version + 1}`],
+      "write",
+    );
+  }
+}
 
 export async function createDbClient(
   url: string,
   authToken?: string,
 ): Promise<Client> {
   const client = createClient({ url, authToken });
-  await client.execute(SCHEMA);
+  await migrate(client);
   return client;
 }
 

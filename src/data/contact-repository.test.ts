@@ -21,6 +21,7 @@ describe("ContactRepository (libsql)", () => {
     const created = await repo.create({
       name: "Camille Martin",
       company: "Boulangerie Martin",
+      stage: "a_contacter",
     });
 
     expect(created.id).toBeTruthy();
@@ -33,7 +34,7 @@ describe("ContactRepository (libsql)", () => {
     const client = await createDbClient(":memory:");
     const repo = createLibsqlContactRepository(client);
 
-    await repo.create({ name: "Camille Martin", company: null });
+    await repo.create({ name: "Camille Martin", company: null, stage: "a_contacter" });
 
     const [contact] = await repo.list();
     expect(contact.company).toBeNull();
@@ -44,8 +45,8 @@ describe("ContactRepository (libsql)", () => {
     const client = await createDbClient(":memory:");
     const repo = createLibsqlContactRepository(client);
 
-    await repo.create({ name: "Premier", company: null });
-    await repo.create({ name: "Deuxième", company: null });
+    await repo.create({ name: "Premier", company: null, stage: "a_contacter" });
+    await repo.create({ name: "Deuxième", company: null, stage: "a_contacter" });
 
     const names = (await repo.list()).map((contact) => contact.name);
     expect(names).toEqual(["Deuxième", "Premier"]);
@@ -61,6 +62,7 @@ describe("ContactRepository (libsql)", () => {
     await createLibsqlContactRepository(first).create({
       name: "Camille Martin",
       company: "Boulangerie Martin",
+      stage: "a_contacter",
     });
     first.close();
 
@@ -73,5 +75,44 @@ describe("ContactRepository (libsql)", () => {
       name: "Camille Martin",
       company: "Boulangerie Martin",
     });
+  });
+
+  it("enregistre et relit l'étape du contact", async () => {
+    const client = await createDbClient(":memory:");
+    const repo = createLibsqlContactRepository(client);
+
+    const created = await repo.create({ name: "Camille Martin", company: null, stage: "contacte" });
+
+    expect(created.stage).toBe("contacte");
+    expect((await repo.list())[0].stage).toBe("contacte");
+    client.close();
+  });
+
+  it("retrouve un contact par son id, ou null s'il n'existe pas", async () => {
+    const client = await createDbClient(":memory:");
+    const repo = createLibsqlContactRepository(client);
+    const created = await repo.create({ name: "Camille Martin", company: null, stage: "a_contacter" });
+
+    expect(await repo.findById(created.id)).toEqual(created);
+    expect(await repo.findById("inconnu")).toBeNull();
+    client.close();
+  });
+
+  it("change l'étape et la retrouve après redémarrage", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "pipeline-test-"));
+    tempDirs.push(dir);
+    const url = `file:${join(dir, "test.db")}`;
+
+    const first = await createDbClient(url);
+    const repo = createLibsqlContactRepository(first);
+    const created = await repo.create({ name: "Camille Martin", company: null, stage: "contacte" });
+    await repo.updateStage(created.id, "proposition_envoyee");
+    first.close();
+
+    const second = await createDbClient(url);
+    const reloaded = await createLibsqlContactRepository(second).findById(created.id);
+    second.close();
+
+    expect(reloaded?.stage).toBe("proposition_envoyee");
   });
 });

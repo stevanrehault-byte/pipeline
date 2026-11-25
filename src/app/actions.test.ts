@@ -1,16 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { addContact, refresh } = vi.hoisted(() => ({
+const { addContact, advanceContact, markContactLost, refresh } = vi.hoisted(() => ({
   addContact: vi.fn(),
+  advanceContact: vi.fn(),
+  markContactLost: vi.fn(),
   refresh: vi.fn(),
 }));
 
 vi.mock("@/services/contact-service", () => ({
-  contactService: { addContact },
+  contactService: { addContact, advanceContact, markContactLost },
 }));
 vi.mock("next/cache", () => ({ refresh }));
 
-import { addContactAction } from "@/app/actions";
+import {
+  addContactAction,
+  advanceContactAction,
+  markContactLostAction,
+} from "@/app/actions";
 
 const emptyState = { error: null, values: { name: "", company: "" } };
 
@@ -63,5 +69,31 @@ describe("addContactAction", () => {
       error: "Le nom est obligatoire.",
       values: { name: "  ", company: "Boulangerie Martin" },
     });
+  });
+});
+
+describe("actions d'étape", () => {
+  beforeEach(() => {
+    advanceContact.mockReset();
+    markContactLost.mockReset();
+    refresh.mockReset();
+  });
+
+  it("fait avancer le contact puis rafraîchit la liste", async () => {
+    advanceContact.mockResolvedValue({ ok: true });
+
+    await advanceContactAction("c1");
+
+    expect(advanceContact).toHaveBeenCalledWith("c1");
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("marque le contact perdu puis rafraîchit la liste", async () => {
+    markContactLost.mockResolvedValue({ ok: true });
+
+    await markContactLostAction("c1");
+
+    expect(markContactLost).toHaveBeenCalledWith("c1");
+    expect(refresh).toHaveBeenCalled();
   });
 });
