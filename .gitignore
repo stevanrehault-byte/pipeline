@@ -49,3 +49,7 @@ next-env.d.ts
 *.db-wal
 *.db-shm
 *.db.bak*
+
+# Claude Code : réglages et instructions personnels, jamais versionnés
+CLAUDE.local.md
+.claude/settings.local.json
