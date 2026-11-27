@@ -53,3 +53,6 @@ next-env.d.ts
 # Claude Code : réglages et instructions personnels, jamais versionnés
 CLAUDE.local.md
 .claude/settings.local.json
+
+# Playwright MCP : captures et journaux locaux (contiennent des données de contacts)
+.playwright-mcp/
