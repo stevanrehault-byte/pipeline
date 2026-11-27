@@ -12,6 +12,8 @@ Mini CRM de prospection mono-utilisateur. `INTENT.md` fixe le produit, l'archite
 
 État actuel : les 5 lots de `lots.md` sont faits (contacts, étapes, relances en heure de Paris, tableau du jour, relance faite). Les lots sont aussi des issues GitHub (label `lot`, skill `backlog`). shadcn : `button`, `input`, `label` ; thème « Départs » appliqué. Règles par couche dans `.claude/rules/`. Schéma versionné par la table `schema_version` dans `src/data/db.ts` (v3 : `follow_up_at`). Ne jamais écrire `PRAGMA user_version` : Turso le refuse.
 
+Les décisions d'architecture sont dans docs/decisions/
+
 Base : `@libsql/client`, URL dans `DATABASE_URL` (fichier `.env.local` non versionné, `DATABASE_URL=file:pipeline.db` en local ; `libsql://…` + `DATABASE_AUTH_TOKEN` pour Turso). Sans `DATABASE_URL`, l'app refuse de démarrer. Le schéma est créé par `CREATE TABLE IF NOT EXISTS` dans `src/data/db.ts` (pas encore d'outil de migration). Les fichiers `*.db` sont ignorés par git.
 
 ## Commandes
