@@ -10,7 +10,7 @@ Lis INTENT.md avant tout travail.
 
 Mini CRM de prospection mono-utilisateur. `INTENT.md` fixe le produit, l'architecture cible, le hors-périmètre (pas d'auth, pas de multi-utilisateur) et les critères d'acceptation.
 
-État actuel : les 5 lots de `lots.md` sont faits (contacts, étapes, relances en heure de Paris, tableau du jour, relance faite). Les lots sont aussi des issues GitHub (label `lot`, skill `backlog`). shadcn : `button`, `input`, `label` ; thème « Départs » appliqué. Règles par couche dans `.claude/rules/`. Schéma versionné par la table `schema_version` dans `src/data/db.ts` (v3 : `follow_up_at`). Ne jamais écrire `PRAGMA user_version` : Turso le refuse.
+État actuel : les 5 lots de `lots.md` sont faits (contacts, étapes, relances en heure de Paris, tableau du jour, relance faite). Les lots sont aussi des issues GitHub (label `lot`, skill `backlog`). shadcn : `button`, `input`, `label` ; thème « Départs » appliqué. Schéma versionné par la table `schema_version` dans `src/data/db.ts` (v3 : `follow_up_at`). Ne jamais écrire `PRAGMA user_version` : Turso le refuse.
 
 Les décisions d'architecture sont dans docs/decisions/
 
@@ -42,17 +42,14 @@ pnpm test -t "nom du test"                        # filtrer par nom
 - Tailwind CSS v4 chargé via un loader Turbopack (`@tailwindcss/turbopack` déclaré dans `next.config.ts`), pas via PostCSS. `globals.css` fait `@import "tailwindcss"`.
 - Les types globaux de routes (ex. `LayoutProps<"/">`) sont générés par Next dans `.next/types`.
 - shadcn (préréglage `base-nova`, composants sur `@base-ui/react`, pas Radix). Ajouter un composant : `pnpm dlx shadcn@latest add <nom>` → `src/components/ui`. `cn()` vient du paquet `cn` (pas clsx/tailwind-merge). Après une commande shadcn qui touche `globals.css`, vérifier que `--font-sans` pointe sur `var(--font-barlow)` et `--font-heading` sur `var(--font-barlow-condensed)` (l'init avait rendu `--font-sans` circulaire), et que shadcn n'a pas réintroduit de bloc `.dark` ni de couleurs `oklch` par défaut.
-- Design : lire `DESIGN.md` (système « Départs ») et `PRODUCT.md` avant tout travail d'interface. Thème unique sombre : les couleurs sont dans `:root`, et `<html>` porte la classe `dark` pour que les variantes `dark:` de shadcn s'appliquent. Utiliser les tokens (`bg-primary`, `text-muted-foreground`…), jamais de couleurs Tailwind codées en dur. L'ambre (`primary`) est réservé à l'action et à l'attention.
+- Thème unique sombre : les couleurs sont dans `:root`, et `<html>` porte la classe `dark` pour que les variantes `dark:` de shadcn s'appliquent.
 - Plugin Impeccable : `.impeccable/config.json` est versionné ; `design-options.html` est la planche des trois pistes (A retenue).
 - Si un changement CSS n'apparaît pas dans le build, le cache Turbopack peut être périmé : supprimer `.next` et rebuilder.
 - `pnpm-workspace.yaml` bloque les scripts de build de `sharp` et `unrs-resolver` (`allowBuilds: false`).
 
 ## Architecture (INTENT.md)
 
-Trois couches, dépendances dans un seul sens : présentation (`src/app`, `src/components`) → service (`src/services`) → données (`src/data`). Jamais d'import dans l'autre sens.
-- La couche données expose une interface (ex. `ContactRepository`) et une implémentation (`createLibsqlContactRepository(client)`). Les services reçoivent le repository en paramètre (`createContactService(repo)`), ce qui permet de les tester avec un faux repository ; le fichier de service exporte aussi l'instance branchée (`contactService`) utilisée par l'app.
+Trois couches, dépendances dans un seul sens : présentation (`src/app`, `src/components`) → service (`src/services`) → données (`src/data`). Jamais d'import dans l'autre sens. Les consignes de chaque couche sont dans `.claude/rules/` (`presentation.md`, `service.md`, `donnees.md`).
+- Chaque fichier de service exporte la fabrique (`createContactService(repo)`) et l'instance branchée (`contactService`) utilisée par l'app.
 - Mutations : Server Actions dans `src/app/actions.ts`, qui appellent le service puis `refresh()` de `next/cache`. Les lectures de la base se font dans un composant serveur sous `<Suspense>` (obligatoire avec `cacheComponents`).
-- Seule la couche données accède à la base : SQLite en local, Turso en production (décision actée).
-- Passer de SQLite à Turso ne doit modifier que la couche données : garder la couche service indépendante du driver.
-- Les règles métier vivent dans la couche service et sont couvertes par des tests unitaires.
-- UI en composants shadcn, déploiement sur Vercel.
+- Déploiement sur Vercel.
